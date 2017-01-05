@@ -89,6 +89,7 @@
     </ApplicationDefinition>
     <Compile Include="Models\DataEdge.cs" />
     <Compile Include="Models\DataVertex.cs" />
+    <Compile Include="Models\EditorObjectManager.cs" />
     <Compile Include="Models\GraphAreaUnit.cs" />
     <Compile Include="Models\GraphField.cs" />
     <Compile Include="Models\LogicCoreExample.cs" />

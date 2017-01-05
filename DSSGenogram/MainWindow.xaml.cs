@@ -15,6 +15,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using GraphX.Controls;
+using DSSGenogram.Utils;
 
 namespace DSSGenogram
 {
@@ -23,11 +24,17 @@ namespace DSSGenogram
     /// </summary>
     public partial class MainWindow : Window
     {
+
+        private VertexControl _ecFrom;
+        private readonly EditorObjectManager _editorManager;
+
         public MainWindow()
         {
             InitializeComponent();
 
-            gg_Area.VertexClicked += gg_Area_VertexClicked;
+            _editorManager = new EditorObjectManager(gg_Area, gg_zoomctrl);
+
+            gg_Area.VertexSelected += Gg_Area_VertexSelected;
             gg_Area.DragEnter += gg_Area_DragEnter;
             gg_Area.VertexMouseUp += Gg_Area_VertexMouseUp;
 
@@ -36,9 +43,14 @@ namespace DSSGenogram
             Loaded += gg_Loaded;
         }
 
+        private void Gg_Area_VertexSelected(object sender, VertexSelectedEventArgs args)
+        {
+            CreateEdgeControl(args.VertexControl);
+        }
+
         private void Gg_Area_VertexMouseUp(object sender, VertexSelectedEventArgs args)
         {
-            throw new NotImplementedException();
+            return;
         }
         
         private void gg_Loaded(object sender, RoutedEventArgs e)
@@ -46,6 +58,7 @@ namespace DSSGenogram
             try
             {
                 gg_Area.ClearLayout();
+
 
                 var graph = new GraphField();
 
@@ -65,14 +78,42 @@ namespace DSSGenogram
             }
         }
 
-        private void gg_Area_VertexClicked(object sender, VertexClickedEventArgs args)
+        private VertexControl CreateVertexControl(Point position)
         {
-            if (args.Modifiers == ModifierKeys.Control )
+            var data = new DataVertex("Vertex " + (gg_Area.VertexList.Count + 1)) { ImageId = ShowcaseHelper.Rand.Next(0, ThemedDataStorage.EditorImages.Count) };
+            var vc = new VertexControl(data);
+            vc.SetPosition(position);
+            gg_Area.AddVertexAndData(data, vc, true);
+            return vc;
+        }
+
+
+        private void CreateEdgeControl(VertexControl vc)
+        {
+            try
             {
+                if (_ecFrom == null)
+                {
+                    _editorManager.CreateVirtualEdge(vc, vc.GetPosition());
+                    _ecFrom = vc;
+                    HighlightBehaviour.SetHighlighted(_ecFrom, true);
+                    return;
+                }
+                if (_ecFrom == vc) return;
+
+                var data = new DataEdge((DataVertex)_ecFrom.Vertex, (DataVertex)vc.Vertex);
+                var ec = new EdgeControl(_ecFrom, vc, data);
+                gg_Area.InsertEdgeAndData(data, ec, 0, true);
+
+                HighlightBehaviour.SetHighlighted(_ecFrom, false);
+                _ecFrom = null;
+                _editorManager.DestroyVirtualEdge();
 
             }
-
-            args.MouseArgs.Handled = true;
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         private void gg_Area_DragEnter(object sender, DragEventArgs e)
