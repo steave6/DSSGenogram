@@ -98,6 +98,9 @@
     <Compile Include="Utils\ThemedDataStorage.cs" />
     <Compile Include="Utils\ValueToPersonImageConverter.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
+    <Compile Include="Views\GetVertexData.xaml.cs">
+      <DependentUpon>GetVertexData.xaml</DependentUpon>
+    </Compile>
     <Page Include="Assets\ModernUI.Snowflakes.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -118,6 +121,10 @@
     <Page Include="Templates\FamilyTree.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\GetVertexData.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>

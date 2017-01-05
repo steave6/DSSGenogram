@@ -47,7 +47,8 @@
         <TabControl Grid.Row="1" Grid.Column="0" >
             <TabItem Header="General">
                 <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top" Orientation="Horizontal">
-                    <Button x:Name="button" Content="Create" Width="75" Height="30"/>
+                    <Button x:Name="btnCreate" Content="Create" Width="75" Height="30"/>
+                    <Button x:Name="btnLayout" Content="Layout" Width="75" Height="30"/>
 
                 </StackPanel>
             </TabItem>
@@ -55,8 +56,8 @@
             <TabItem Header="Details" />
         </TabControl>
 
-        <Border Grid.Row="1" Grid.Column="1" BorderBrush="{DynamicResource ButtonBorder}" BorderThickness="1"  Margin="2" >
-            <controls:ZoomControl x:Name="gg_zoomctrl" Background="{DynamicResource ButtonBackground}" Foreground="{DynamicResource ButtonText}">
+        <Border Grid.Row="1" Grid.Column="1" BorderThickness="1"  Margin="2" >
+            <controls:ZoomControl x:Name="gg_zoomctrl" Background="Transparent" VerticalContentAlignment="Center" VerticalAlignment="Center">
                 <wpf:GraphAreaUnit x:Name="gg_Area"/>
                 
             </controls:ZoomControl>

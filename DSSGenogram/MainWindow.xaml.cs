@@ -16,6 +16,8 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using GraphX.Controls;
 using DSSGenogram.Utils;
+using GraphX.PCL.Common.Enums;
+using GraphX.PCL.Logic.Algorithms.LayoutAlgorithms;
 
 namespace DSSGenogram
 {
@@ -40,7 +42,52 @@ namespace DSSGenogram
 
             //gg_Area.GetAllVertexControls //+= new DragEventHandler(all_Vertex_DragEnter);
 
+            gg_zoomctrl.MouseDown += Gg_zoomctrl_MouseDown;
+
+            btnCreate.Click += BtnCreate_Click;
+            btnLayout.Click += BtnLayout_Click;
+
             Loaded += gg_Loaded;
+        }
+
+        private void BtnCreate_Click(object sender, RoutedEventArgs e)
+        {
+            var setVBData = new Views.GetVertexData();
+            setVBData.ShowDialog();
+
+            VertexControl vc = new VertexControl(setVBData.DataVertex);
+
+            gg_Area.AddVertexAndData(setVBData.DataVertex, vc);
+
+            gg_Area.RelayoutGraph();
+            gg_zoomctrl.ZoomToFill();
+        }
+
+        private void BtnLayout_Click(object sender, RoutedEventArgs e)
+        {
+            gg_Area.LogicCore.DefaultLayoutAlgorithm = LayoutAlgorithmTypeEnum.EfficientSugiyama;
+            var prms = gg_Area.LogicCore.AlgorithmFactory.CreateLayoutParameters(LayoutAlgorithmTypeEnum.EfficientSugiyama) as EfficientSugiyamaLayoutParameters;
+            prms.EdgeRouting = SugiyamaEdgeRoutings.Orthogonal;
+            prms.LayerDistance = prms.VertexDistance = 100;
+            gg_Area.LogicCore.EdgeCurvingEnabled = false;
+            gg_Area.LogicCore.DefaultLayoutAlgorithmParams = prms;
+
+            gg_Area.RelayoutGraph();
+            gg_zoomctrl.ZoomToFill();
+        }
+
+        private void Gg_zoomctrl_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            //create vertices and edges only in Edit mode
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                var pos = gg_zoomctrl.TranslatePoint(e.GetPosition(gg_zoomctrl), gg_Area);
+                pos.Offset(-22.5, -22.5);
+                var vc = CreateVertexControl(pos);
+                if (_ecFrom != null)
+                    CreateEdgeControl(vc);
+            }
+
         }
 
         private void Gg_Area_VertexSelected(object sender, VertexSelectedEventArgs args)
@@ -69,8 +116,12 @@ namespace DSSGenogram
                 var gglogic = new LogicCoreExample();
                 gg_Area.LogicCore = gglogic;
 
-                gg_Area.GenerateGraph(graph);
 
+                foreach (var item in graph.Vertices)
+                    ThemedDataStorage.FillDataVertex(item);
+
+                gg_Area.GenerateGraph(graph);
+                gg_zoomctrl.ZoomToFill();
             }
             catch (Exception ex)
             {
@@ -128,6 +179,43 @@ namespace DSSGenogram
         private void all_Vertex_DragEnter(object sender, DragEventArgs e)
         {
 
+        }
+    }
+
+    public class EdgeBlueprint : IDisposable
+    {
+        public VertexControl Source { get; set; }
+        public Point TargetPos { get; set; }
+        public Path EdgePath { get; set; }
+
+        public EdgeBlueprint(VertexControl source, Point targetPos, Brush brush)
+        {
+            EdgePath = new Path() { Stroke = brush, Data = new LineGeometry() };
+            Source = source;
+            Source.PositionChanged += Source_PositionChanged;
+        }
+
+        void Source_PositionChanged(object sender, VertexPositionEventArgs args)
+        {
+            UpdateGeometry(Source.GetCenterPosition(), TargetPos);
+        }
+
+        internal void UpdateTargetPosition(Point point)
+        {
+            TargetPos = point;
+            UpdateGeometry(Source.GetCenterPosition(), point);
+        }
+
+        private void UpdateGeometry(Point start, Point end)
+        {
+            EdgePath.Data = new LineGeometry(start, end);
+            (EdgePath.Data as LineGeometry).Freeze();
+        }
+
+        public void Dispose()
+        {
+            Source.PositionChanged -= Source_PositionChanged;
+            Source = null;
         }
     }
 }
